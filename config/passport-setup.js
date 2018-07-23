@@ -1,7 +1,8 @@
 var passport = require('passport'),
     User = require('../models/user-models'),
     //  Profile = require('../routes/profile-routes')
-     FacebookStrategy = require('passport-facebook').Strategy;
+     FacebookStrategy = require('passport-facebook').Strategy,
+    GoogleStrategy = require('passport-google-oauth20').Strategy;
 
 
 
@@ -34,3 +35,18 @@ passport.use(new FacebookStrategy({
     }
 ));
 
+passport.use(new GoogleStrategy({
+        clientID:"693122386438-1ccv21roof2daqacq1vpdh6d5gg37n1i.apps.googleusercontent.com",
+        clientSecret:"qkrgxD0EPwkau3kXa2dMxHBc",
+        callbackURL: "http://localhost:3000/auth/google/callback"
+    },
+    function(accessToken, refreshToken, profile, done) {
+        User.findOrCreate({where:{fullname:profile.displayName},defaults:{fullname:profile.displayName}})
+            .spread(function (user,created) {
+                done(null,user)
+            })
+            .catch(function (err) {
+                return done(null,err)
+            })
+    }
+));
