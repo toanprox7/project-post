@@ -26,7 +26,7 @@ app.use(passport.session());
 //create middleware for homepage
 app.use(bodyParser.urlencoded({extended:true}));
 app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname,'public')));
+app.use(express.static('public'));
 app.use(cookieSession({maxAge:24*60*60*1000, keys:["aasgjdhashd"]}));
 app.use('/',userRoutes);
 

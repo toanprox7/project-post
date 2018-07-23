@@ -2,14 +2,22 @@ const express = require('express');
 const router = express.Router();
 const passport = require('passport');
 
+router.use('/auth', function (req,res,next) {
 
+    next()
+});
 router.get('/auth/admin', function (req,res,next) {
 
 res.render('admin',{user:req.session.fullname});
 });
 
+router.get('/auth/logout', function (req,res,next) {
+    req.session=null;
+res.redirect('/');
+});
+
 router.get('/', function (req,res,next) {
-res.render('index');
+res.render('login');
 });
 
 router.get('/auth/facebook', passport.authenticate('facebook', {session:true,

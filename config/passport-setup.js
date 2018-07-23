@@ -22,9 +22,11 @@ passport.use(new FacebookStrategy({
         callbackURL: "http://localhost:3000/auth/facebook/callback"
     },
     function(accessToken, refreshToken, profile, done) {
-        User.create({fullname:profile.displayName})
-            .then(function (user) {
-                done(null, user);
+        User.findOrCreate({where:{fullname:profile.displayName},defaults:{fullname:profile.displayName}})
+            .spread(function (user,created) {
+                console.log(user.get({plain:true}))
+                console.log(created);
+                done(null,user)
             })
             .catch(function (err) {
                 return done(null,err)
