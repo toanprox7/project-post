@@ -4,15 +4,101 @@ const passport = require('passport');
 const User = require('../models/user-models');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
-
-
-
-router.use('/auth', function (req,res,next) {
-
-    next()
+var transporter = nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false, // true for 465, false for other ports
+    auth: {
+        user: "toanpro7x@gmail.com", // generated ethereal user
+        pass: "lncbhenspsdlgous" // generated ethereal password
+    }
 });
-router.get('/auth/admin', function (req,res,next) {
 
+
+router.get('/auth/forget/reset/:tokenReset', function (req,res,next) {
+    let tokenReset = req.params.tokenReset;
+    jwt.verify(tokenReset, 'shhhhh', function (err,decoded) {
+        if (decoded){
+            res.render('chargePass');
+        } else{
+            res.send('ma token da het han vui long thu reset lai');
+        }
+    })
+});
+
+
+router.post('/auth/forget/reset/:tokenReset', function (req,res,next) {
+    let password = req.body.password;
+    let confirmPassword = req.body.confirmPassword;
+    if (password === confirmPassword){
+        User.update({password:password},{where:{email:req.session.email}})
+            .then(function (user) {
+                console.log('success');
+                req.session =null;
+                res.send('ban da doi mat khau thanh cong');
+            })
+            .catch(function (err) {
+            throw err
+        })
+        
+    }else{
+        res.redirect('/auth/forget/reset/:tokenReset');
+    }
+
+});
+
+router.get('/auth/forget', function (req,res,next) {
+    res.render('forget');
+});
+
+router.post('/auth/forget', function (req,res,next) {
+    let email =req.body.email;
+    let TokenReset = jwt.sign({ foo: 'bar' }, 'shhhhh',{ expiresIn: 60*60 });
+    var linkReset = "http://localhost:3000/auth/forget/reset/"+TokenReset;
+    User.findOne({where:{email:email}})
+        .then(function (user) {
+            if (user){
+                email= req.session.email;
+               console.log(user.dataValues.email);
+                let transporter = nodemailer.createTransport({
+                    host: 'smtp.gmail.com',
+                    port: 587,
+                    secure: false, // true for 465, false for other ports
+                    auth: {
+                        user: "toanpro7x@gmail.com", // generated ethereal user
+                        pass: "lncbhenspsdlgous" // generated ethereal password
+                    }
+                });
+
+                let mailOptions = {
+                    from: '"Hackers"<toanpro7x@gmail.com>', // sender address
+                    to: user.dataValues.email, // list of receivers
+                    subject: 'Hello ✔', // Subject line
+                    text: 'Hello world?', // plain text body
+                    html: '<b>Hello ban?</b> Ban click vao links duoi kia la se duoc doi pass ngay <a href="'+linkReset+'">'+linkReset+'</a>'
+                    // html body
+                };
+
+                transporter.sendMail(mailOptions, (error, info) => {
+                    if (error) {
+                        return console.log(error);
+                    }else{
+                        console.log('messenge was sent');
+                    }
+                });
+                res.send("Ban vui long kiem tra lai gmail cua ban");
+
+            } else{
+                console.log('khong tim thay user nao co email nay ca');
+                return res.redirect('/auth/forget')
+            }
+        })
+        .catch(function (err) {
+        throw err
+    })
+});
+
+router.get('/auth/admin', function (req,res,next) {
 res.render('admin',{user:req.session.fullname});
 });
 
@@ -78,18 +164,8 @@ router.post('/auth/register', function (req,res,next) {
         password = req.body.password,
         email = req.body.email,
         fullname = req.body.fullname;
-
     var tokenRegister = jwt.sign({ foo: 'bar' }, 'shhhhh');
     var linkVerifyReg ="http://localhost:3000/auth/register/verify/"+tokenRegister;
-    let transporter = nodemailer.createTransport({
-        host: 'smtp.gmail.com',
-        port: 587,
-        secure: false, // true for 465, false for other ports
-        auth: {
-            user: "toanpro7x@gmail.com", // generated ethereal user
-            pass: "lncbhenspsdlgous" // generated ethereal password
-        }
-    });
 
 // setup email data with unicode symbols
     let mailOptions = {
