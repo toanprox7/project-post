@@ -1,5 +1,5 @@
 var passport = require('passport'),
-    User = require('../models/user-models'),
+    db = require('../models/index'),
     //  Profile = require('../routes/profile-routes')
      FacebookStrategy = require('passport-facebook').Strategy,
     GoogleStrategy = require('passport-google-oauth20').Strategy;
@@ -11,7 +11,7 @@ passport.serializeUser(function (users,done) {
 });
 
 passport.deserializeUser(function (id,done) {
-    User.findById(id).then(function (users) {
+    db.Users.findById(id).then(function (users) {
         done(null,users)
     });
 });
@@ -23,7 +23,7 @@ passport.use(new FacebookStrategy({
         callbackURL: "http://localhost:3000/auth/facebook/callback"
     },
     function(accessToken, refreshToken, profile, done) {
-        User.findOrCreate({where:{fullname:profile.displayName},defaults:{fullname:profile.displayName}})
+        db.Users.findOrCreate({where:{fullname:profile.displayName},defaults:{fullname:profile.displayName}})
             .spread(function (user,created) {
                 console.log(user.get({plain:true}))
                 console.log(created);
@@ -41,7 +41,7 @@ passport.use(new GoogleStrategy({
         callbackURL: "http://localhost:3000/auth/google/callback"
     },
     function(accessToken, refreshToken, profile, done) {
-        User.findOrCreate({where:{fullname:profile.displayName},defaults:{fullname:profile.displayName}})
+        db.Users.findOrCreate({where:{fullname:profile.displayName},defaults:{fullname:profile.displayName}})
             .spread(function (user,created) {
                 done(null,user)
             })

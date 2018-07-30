@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const passport = require('passport');
-const User = require('../models/user-models');
+const db =require('../models/index');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 var transporter = nodemailer.createTransport({
@@ -13,6 +13,13 @@ var transporter = nodemailer.createTransport({
         pass: "lncbhenspsdlgous" // generated ethereal password
     }
 });
+
+// router.use('/auth/:test', function (req,res,next) {
+//     if (!req.session.fullname){
+//         console.log("khong ton tai session");
+//     }
+//     next();
+// });
 
 
 router.get('/auth/forget/reset/:tokenReset', function (req,res,next) {
@@ -31,7 +38,7 @@ router.post('/auth/forget/reset/:tokenReset', function (req,res,next) {
     let password = req.body.password;
     let confirmPassword = req.body.confirmPassword;
     if (password === confirmPassword){
-        User.update({password:password},{where:{email:req.session.email}})
+        db.Users.update({password:password},{where:{email:req.session.email}})
             .then(function (user) {
                 console.log('success');
                 req.session =null;
@@ -55,7 +62,7 @@ router.post('/auth/forget', function (req,res,next) {
     let email =req.body.email;
     let TokenReset = jwt.sign({ foo: 'bar' }, 'shhhhh',{ expiresIn: 60*60 });
     var linkReset = "http://localhost:3000/auth/forget/reset/"+TokenReset;
-    User.findOne({where:{email:email}})
+    db.Users.findOne({where:{email:email}})
         .then(function (user) {
             if (user){
                 email= req.session.email;
@@ -137,7 +144,7 @@ router.post('/',function (req,res,next) {
     let username = req.body.username;
     let password = req.body.password;
 
-    User.findOne({where:{username:username,password:password,status:"active"}})
+    db.Users.findOne({where:{username:username,password:password,status:"active"}})
         .then(function (success) {
             if (success){
                 console.log(success);
@@ -154,7 +161,7 @@ router.get('/auth/register',function (req,res,next) {
 });
 
 router.get('/auth/register/verify/:getVerifyToken',function (req,res,next) {
-    User.update({"status":"active"},{where:{"token":req.params.getVerifyToken}}).then(function (dat) {
+    db.Users.update({"status":"active"},{where:{"token":req.params.getVerifyToken}}).then(function (dat) {
         res.render('successReg');
     })
 });
@@ -186,7 +193,7 @@ router.post('/auth/register', function (req,res,next) {
 
     });
 
-    User.findOrCreate({where:{username:username}, defaults:{password:password,email:email,fullname:fullname,quyen:1,status:'unactive',token:tokenRegister}})
+    db.Users.findOrCreate({where:{username:username}, defaults:{password:password,email:email,fullname:fullname,quyen:1,status:'unactive',token:tokenRegister}})
         .spread(function (user,created) {
             if (user){
                 console.log(user);
